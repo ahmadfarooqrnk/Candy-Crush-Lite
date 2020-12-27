@@ -27,7 +27,15 @@ int main()
     load_sprites(normal, striped, wrapped, nc, sc, wc);
 
     while (game.isOpen()) {
-
+        Event x;
+        while (game.pollEvent(x)) {
+            if (x.type == Event::Closed) {
+                game.close();
+            }
+        }
+        game.clear();
+        game.draw(background);
+        game.display();
     }
 
     return 0;
