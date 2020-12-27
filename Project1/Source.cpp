@@ -64,4 +64,4 @@ void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture n
         striped[i].setTexture(sc[i]);
         wrapped[i].setTexture(wc[i]);
     }
-}
+}///
