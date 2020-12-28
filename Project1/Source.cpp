@@ -12,6 +12,7 @@ void load_candy_textures(Texture nc[], Texture sc[], Texture wc[]);
 void candy_string(int i, string& color);
 void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture nc[], Texture sc[], Texture wc[]);
 void load_grid(int pieces[][9]);
+bool adjacent_block(int x1, int y1, int x2, int y2);
 
 int main()
 {
@@ -63,9 +64,11 @@ int main()
         else if (clicks == 2) {
             x2 = mouse_pos.x;
             y2 = mouse_pos.y;
-            int temp = pieces[x1][y1];
-            pieces[x1][y1] = pieces[x2][y2];
-            pieces[x2][y2] = temp;
+            if (adjacent_block(x1, y1, x2, y2)) {
+                int temp = pieces[x1][y1];
+                pieces[x1][y1] = pieces[x2][y2];
+                pieces[x2][y2] = temp;
+            }
             clicks = 0;
             cout << "yos";
         }
@@ -128,5 +131,14 @@ void load_grid(int pieces[][9]) {
         for (int j = 0;j < 9;j++) {
             pieces[i][j] = rand() % 5;
         }
+    }
+}
+
+bool adjacent_block(int x1, int y1, int x2, int y2) {
+    if ((x1 == x2 && y1 == (y2 - 1)) || (x1 == (x2 - 1) && y1 == y2) || (x1 == x2 && y1 == (y2 + 1)) || (x1 == (x2 + 1) && y1 == y2)) {
+        return true;
+    }
+    else {
+        return false;
     }
 }
