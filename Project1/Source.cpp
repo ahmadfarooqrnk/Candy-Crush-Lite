@@ -36,9 +36,10 @@ int main()
     load_grid(pieces);
 
     //To control everything inside the graphics window
+    int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+    int clicks = 0;
+    Vector2<int> mouse_pos;
     while (game.isOpen()) {
-        Vector2<int> mouse_pos;
-        int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
         Event x;
         while (game.pollEvent(x)) {
             if (x.type == Event::Closed) {
@@ -49,12 +50,25 @@ int main()
                     mouse_pos = Mouse::getPosition(game);
                     mouse_pos -= offset;
                     mouse_pos /= tile;
-                    x1 = mouse_pos.x;
-                    y1 = mouse_pos.y;
+                    clicks += 1;
                 }
             }
         }
-        game.clear();
+        if (clicks == 1) {
+            x1 = mouse_pos.x;
+            y1 = mouse_pos.y;
+            cout << clicks << endl;
+            cout << x1 << "," << y1 << endl;
+        }
+        else if (clicks == 2) {
+            x2 = mouse_pos.x;
+            y2 = mouse_pos.y;
+            int temp = pieces[x1][y1];
+            pieces[x1][y1] = pieces[x2][y2];
+            pieces[x2][y2] = temp;
+            clicks = 0;
+            cout << "yos";
+        }
         //draw
         game.draw(background);
         for (int i = 0;i < 9;i++) {
