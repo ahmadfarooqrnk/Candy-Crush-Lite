@@ -14,6 +14,8 @@ int main()
 {
     srand((unsigned int)time(0));
     RenderWindow game(VideoMode(1080, 600), "Candy Crush <3");//setting window size
+    game.setFramerateLimit(60);
+    
     //declaring textures
     Texture nc[5], sc[5], wc[5], bg, bomb;
     bomb.loadFromFile("textures/bomb.png");
@@ -26,6 +28,16 @@ int main()
 
     load_sprites(normal, striped, wrapped, nc, sc, wc);
 
+    //initializing game grid
+
+    int pieces[9][9] = { {0},{0} };
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0;j < 9;j++) {
+            pieces[i][j] = rand() % 5;
+        }
+    }
+
+    //To control everything inside the graphics window
     while (game.isOpen()) {
         Event x;
         while (game.pollEvent(x)) {
