@@ -11,6 +11,7 @@ Vector2<int> offset(400, 9);
 void load_candy_textures(Texture nc[], Texture sc[], Texture wc[]);
 void candy_string(int i, string& color);
 void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture nc[], Texture sc[], Texture wc[]);
+void load_grid(int pieces[][9]);
 
 int main()
 {
@@ -31,13 +32,8 @@ int main()
     load_sprites(normal, striped, wrapped, nc, sc, wc);
 
     //initializing game grid
-
     int pieces[9][9] = { {0},{0} };
-    for (int i = 0;i < 9;i++) {
-        for (int j = 0;j < 9;j++) {
-            pieces[i][j] = rand() % 5;
-        }
-    }
+    load_grid(pieces);
 
     //To control everything inside the graphics window
     while (game.isOpen()) {
@@ -110,5 +106,13 @@ void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture n
         normal[i].setTexture(nc[i]);
         striped[i].setTexture(sc[i]);
         wrapped[i].setTexture(wc[i]);
+    }
+}
+
+void load_grid(int pieces[][9]) {
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0;j < 9;j++) {
+            pieces[i][j] = rand() % 5;
+        }
     }
 }
