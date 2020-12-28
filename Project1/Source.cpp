@@ -1,13 +1,15 @@
 #include <SFML/Graphics.hpp>
 #include <time.h>
+#include <iostream>
 
 using namespace sf;
+using namespace std;
 
-int tile = 54;
-Vector2<int> offset(48, 25);
+int tile = 65;
+Vector2<int> offset(400, 9);
 
 void load_candy_textures(Texture nc[], Texture sc[], Texture wc[]);
-void candy_string(int i, String& color);
+void candy_string(int i, string& color);
 void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture nc[], Texture sc[], Texture wc[]);
 
 int main()
@@ -39,22 +41,42 @@ int main()
 
     //To control everything inside the graphics window
     while (game.isOpen()) {
+        Vector2<int> mouse_pos;
+        int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
         Event x;
         while (game.pollEvent(x)) {
             if (x.type == Event::Closed) {
                 game.close();
             }
+            if (x.type == Event::MouseButtonPressed) {
+                if (x.key.code == Mouse::Left) {
+                    mouse_pos = Mouse::getPosition(game);
+                    mouse_pos -= offset;
+                    mouse_pos /= tile;
+                    x1 = mouse_pos.x;
+                    y1 = mouse_pos.y;
+                }
+            }
         }
         game.clear();
+        //draw
         game.draw(background);
+        for (int i = 0;i < 9;i++) {
+            for (int j = 0;j < 9;j++) {
+                normal[pieces[i][j]].setPosition(i * 65.0f + offset.x, j * 65.0f + offset.y);
+                game.draw(normal[pieces[i][j]]);
+            }
+        }
         game.display();
     }
 
     return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 void load_candy_textures(Texture nc[], Texture sc[], Texture wc[]) {
-    String color;
+    string color;
     for (int i = 0;i < 5;i++) {
         candy_string(i, color);
         nc[i].loadFromFile("textures/" + color + ".png");
@@ -63,18 +85,23 @@ void load_candy_textures(Texture nc[], Texture sc[], Texture wc[]) {
     }
 }
 
-void candy_string(int i, String& color) {
+void candy_string(int i, string& color) {
     switch (i) {
     case 0:
         color = "red";
+        break;
     case 1:
         color = "blue";
+        break;
     case 2:
         color = "green";
+        break;
     case 3:
         color = "yellow";
+        break;
     case 4:
         color = "orange";
+        break;
     }
 }
 
