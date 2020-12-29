@@ -11,8 +11,10 @@ Vector2<int> offset(400, 9);
 void load_candy_textures(Texture nc[], Texture sc[], Texture wc[]);
 void candy_string(int i, string& color);
 void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture nc[], Texture sc[], Texture wc[]);
-void load_grid(int pieces[][9]);
+void load_grid(int type, int pieces[][9]);
 bool adjacent_block(int x1, int y1, int x2, int y2);
+void check_match(int grid[][9]);
+void replace_piece(int grid[][9]);
 
 int main()
 {
@@ -34,7 +36,7 @@ int main()
 
     //initializing game grid
     int pieces[9][9] = { {0},{0} };
-    load_grid(pieces);
+    load_grid(1, pieces);
 
     //To control everything inside the graphics window
     int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
@@ -54,12 +56,23 @@ int main()
                     clicks += 1;
                 }
             }
+            if (x.type == Event::KeyPressed) {
+                if (x.key.code == Keyboard::Space) {
+                    cout << endl;
+                    for (int i = 0;i < 9;i++) {
+                        for (int j = 0;j < 9;j++) {
+                            cout << pieces[j][i] << ", ";
+                        }
+                        cout << endl;
+                    }
+                }
+            }
         }
         if (clicks == 1) {
             x1 = mouse_pos.x;
             y1 = mouse_pos.y;
-            cout << clicks << endl;
-            cout << x1 << "," << y1 << endl;
+            cout << clicks << endl;//debug
+            cout << x1 << "," << y1 << endl;//debug
         }
         else if (clicks == 2) {
             x2 = mouse_pos.x;
@@ -70,14 +83,30 @@ int main()
                 pieces[x2][y2] = temp;
             }
             clicks = 0;
-            cout << "yos";
+            cout << "yos";//debug
         }
+        check_match(pieces);
+        replace_piece(pieces);
+
         //draw
         game.draw(background);
-        for (int i = 0;i < 9;i++) {
-            for (int j = 0;j < 9;j++) {
-                normal[pieces[i][j]].setPosition(i * 65.0f + offset.x, j * 65.0f + offset.y);
-                game.draw(normal[pieces[i][j]]);
+        for (int j = 0;j < 9;j++) {
+            for (int i = 0;i < 9;i++) {
+                if (pieces[i][j] >= 0 && pieces[i][j] < 5) {
+                    normal[pieces[i][j]].setPosition(i * 65.0f + offset.x, j * 65.0f + offset.y);
+                    game.draw(normal[pieces[i][j]]);
+                }
+                else if (pieces[i][j] >= 5 && pieces[i][j] < 10) {
+                    striped[pieces[i][j] - 5].setPosition(i * 65.0f + offset.x, j * 65.0f + offset.y);
+                    game.draw(striped[pieces[i][j] - 5]);
+                }
+                else if (pieces[i][j] >= 10 && pieces[i][j] < 15) {
+                    wrapped[pieces[i][j] - 10].setPosition(i * 65.0f + offset.x, j * 65.0f + offset.y);
+                    game.draw(wrapped[pieces[i][j] - 10]);
+                }
+                else if (pieces[i][j] == 16) {
+
+                }
             }
         }
         game.display();
@@ -126,10 +155,15 @@ void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture n
     }
 }
 
-void load_grid(int pieces[][9]) {
+void load_grid(int type, int pieces[][9]) {
     for (int i = 0;i < 9;i++) {
         for (int j = 0;j < 9;j++) {
-            pieces[i][j] = rand() % 5;
+            if (type == 1 && pieces[i][j] >= 0) {
+                pieces[i][j] = rand() % 5;
+            }
+            if (type == 2 && pieces[i][j] < 0) {
+                pieces[i][j] = rand() % 5;
+            }
         }
     }
 }
@@ -140,5 +174,33 @@ bool adjacent_block(int x1, int y1, int x2, int y2) {
     }
     else {
         return false;
+    }
+}
+
+void check_match(int grid[][9]) {
+    int tally = 1;
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0;j < 9;j++) {
+            if (grid[i][j] == grid[i - 1][j] && grid[i][j] == grid[i + 1][j]) {
+                grid[i][j] = -3;
+                grid[i - 1][j] = -3;
+                grid[i + 1][j] = -3;
+            }
+            if (grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j + 1]) {
+                grid[i][j] = -3;
+                grid[i][j - 1] = -3;
+                grid[i][j + 1] = -3;
+            }
+        }
+    }
+}
+
+void replace_piece(int grid[][9]) {
+    for (int i = 8;i > 0;i--) {
+        for (int j = 8;j > 0;j--) {
+            if (grid[j][i] == -3) {
+                grid[j][i] = grid[j - 1][i];
+            }
+        }
     }
 }
