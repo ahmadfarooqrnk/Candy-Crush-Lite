@@ -86,7 +86,7 @@ int main()
             cout << "yos";//debug
         }
         check_match(pieces);
-        replace_piece(pieces);
+        //replace_piece(pieces);
 
         //draw
         game.draw(background);
