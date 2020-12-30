@@ -14,6 +14,7 @@ void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture n
 void load_grid(int type, int pieces[][9]);
 bool adjacent_block(int x1, int y1, int x2, int y2);
 void check_match(int grid[][9]);
+void check_L(int grid[][9]);
 void replace_piece(int grid[][9]);
 
 int main()
@@ -71,8 +72,6 @@ int main()
         if (clicks == 1) {
             x1 = mouse_pos.x;
             y1 = mouse_pos.y;
-            cout << clicks << endl;//debug
-            cout << x1 << "," << y1 << endl;//debug
         }
         else if (clicks == 2) {
             x2 = mouse_pos.x;
@@ -83,10 +82,15 @@ int main()
                 pieces[x2][y2] = temp;
             }
             clicks = 0;
-            cout << "yos";//debug
+            //cout << x1 << "," << y1 << endl;//debug
+            //cout << "yos";//debug
         }
+        //check match 5
+        //check math 4
+        check_L(pieces);
         check_match(pieces);
-        //replace_piece(pieces);
+        replace_piece(pieces);
+        load_grid(2, pieces);
 
         //draw
         game.draw(background);
@@ -105,7 +109,7 @@ int main()
                     game.draw(wrapped[pieces[i][j] - 10]);
                 }
                 else if (pieces[i][j] == 16) {
-
+                    game.draw(c_bomb);
                 }
             }
         }
@@ -122,8 +126,8 @@ void load_candy_textures(Texture nc[], Texture sc[], Texture wc[]) {
     for (int i = 0;i < 5;i++) {
         candy_string(i, color);
         nc[i].loadFromFile("textures/" + color + ".png");
-        sc[i].loadFromFile("textures/" + color + ".png");
-        wc[i].loadFromFile("textures/" + color + ".png");
+        sc[i].loadFromFile("textures/" + color + "_striped.png");
+        wc[i].loadFromFile("textures/" + color + "_wrapped.png");
     }
 }
 
@@ -161,8 +165,8 @@ void load_grid(int type, int pieces[][9]) {
             if (type == 1 && pieces[i][j] >= 0) {
                 pieces[i][j] = rand() % 5;
             }
-            if (type == 2 && pieces[i][j] < 0) {
-                pieces[i][j] = rand() % 5;
+            if (type == 2 && pieces[j][i] == -3) {
+                pieces[j][i] = rand() % 5;
             }
         }
     }
@@ -178,7 +182,6 @@ bool adjacent_block(int x1, int y1, int x2, int y2) {
 }
 
 void check_match(int grid[][9]) {
-    int tally = 1;
     for (int i = 0;i < 9;i++) {
         for (int j = 0;j < 9;j++) {
             if (grid[i][j] == grid[i - 1][j] && grid[i][j] == grid[i + 1][j]) {
@@ -186,10 +189,86 @@ void check_match(int grid[][9]) {
                 grid[i - 1][j] = -3;
                 grid[i + 1][j] = -3;
             }
-            if (grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j + 1]) {
+            if (j - 1 >= 0 && j + 1 < 9/*<-- To avoid erro*/ && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j + 1]) {
                 grid[i][j] = -3;
                 grid[i][j - 1] = -3;
                 grid[i][j + 1] = -3;
+            }
+        }
+    }
+}
+
+void check_L(int grid[][9]) {
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0;j < 9;j++) {
+            if (grid[i][j] == grid[i + 1][j] && grid[i][j] == grid[i + 2][j]) {
+                //check L-shape
+                if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
+                    grid[i + 1][j] = -3;
+                    grid[i + 2][j] = -3;
+                    grid[i][j + 1] = -3;
+                    grid[i][j + 2] = -3;
+                    grid[i][j] += 10;
+                    cout << "yos1";
+                }
+                else if (j - 2 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2]) {
+                    grid[i + 1][j] = -3;
+                    grid[i + 2][j] = -3;
+                    grid[i][j - 1] = -3;
+                    grid[i][j - 2] = -3;
+                    grid[i][j] += 10;
+                }
+                //check T-shape
+                else if (grid[i + 1][j] == grid[i + 1][j + 1] && grid[i + 1][j] == grid[i + 1][j + 2]) {
+                    grid[i][j] = -3;
+                    grid[i + 2][j] = -3;
+                    grid[i + 1][j + 1] = -3;
+                    grid[i + 1][j + 2] = -3;
+                    grid[i + 1][j] += 10;
+                    cout << "yos2";
+                }
+                else if (j - 2 >= 0 && grid[i + 1][j] == grid[i + 1][j - 1] && grid[i + 1][j] == grid[i + 1][j - 2]) {
+                    grid[i][j] = -3;
+                    grid[i + 2][j] = -3;
+                    grid[i + 1][j - 1] = -3;
+                    grid[i + 1][j - 2] = -3;
+                    grid[i + 1][j] += 10;
+                }
+            }
+            if (grid[i][j] == grid[i - 1][j] && grid[i][j] == grid[i - 2][j]) {
+                //check L-shape
+                if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
+                    grid[i - 1][j] = -3;
+                    grid[i - 2][j] = -3;
+                    grid[i][j + 1] = -3;
+                    grid[i][j + 2] = -3;
+                    grid[i][j] += 10;
+                    cout << grid[j][j + 1] << endl;
+                    cout << "yos3" << endl;
+                }
+                else if (j - 2 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2]) {
+                    grid[i - 1][j] = -3;
+                    grid[i - 2][j] = -3;
+                    grid[i][j - 1] = -3;
+                    grid[i][j - 2] = -3;
+                    grid[i][j] += 10;
+                    cout << "yos4";
+                }
+                //check T-shape
+                else if (grid[i - 1][j] == grid[i - 1][j + 1] && grid[i - 1][j] == grid[i - 1][j + 2]) {
+                    grid[i][j] = -3;
+                    grid[i - 2][j] = -3;
+                    grid[i - 1][j + 1] = -3;
+                    grid[i - 1][j + 2] = -3;
+                    grid[i - 1][j] += 10;
+                }
+                else if (j - 2 >= 0 && grid[i - 1][j] == grid[i - 1][j - 1] && grid[i - 1][j] == grid[i - 1][j - 2]) {
+                    grid[i][j] = -3;
+                    grid[i - 2][j] = -3;
+                    grid[i - 1][j - 1] = -3;
+                    grid[i - 1][j - 2] = -3;
+                    grid[i - 1][j] += 10;
+                }
             }
         }
     }
@@ -199,7 +278,9 @@ void replace_piece(int grid[][9]) {
     for (int i = 8;i > 0;i--) {
         for (int j = 8;j > 0;j--) {
             if (grid[j][i] == -3) {
-                grid[j][i] = grid[j - 1][i];
+                int temp = grid[j][i - 1];
+                grid[j][i] = temp;
+                grid[j][i - 1] = -3;
             }
         }
     }
