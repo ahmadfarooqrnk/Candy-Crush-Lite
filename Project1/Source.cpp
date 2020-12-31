@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <time.h>
 #include <iostream>
+#include <fstream>
 
 using namespace sf;
 using namespace std;
@@ -13,9 +14,14 @@ void candy_string(int i, string& color);
 void load_sprites(Sprite normal[], Sprite striped[], Sprite wrapped[], Texture nc[], Texture sc[], Texture wc[]);
 void load_grid(int type, int pieces[][9]);
 bool adjacent_block(int x1, int y1, int x2, int y2);
+void check_match_four(int grid[][9]);
 void check_match(int grid[][9]);
 void check_L(int grid[][9]);
 void replace_piece(int grid[][9]);
+void check_match_five(int grid[][9]);
+
+void save(int pieces[][9], int turn, int score);
+void load(int pieces[][9], int turn, int score);
 
 int main()
 {
@@ -83,10 +89,11 @@ int main()
             }
             clicks = 0;
         }
-        //check match 5
-        //check math 4
+        check_match_five(pieces);
+        check_match_four(pieces);
         check_L(pieces);
         check_match(pieces);
+        replace_piece(pieces);//this function is called multiple times to make sure all tiles go as down as possible
         replace_piece(pieces);
         replace_piece(pieces);
         replace_piece(pieces);
@@ -109,6 +116,7 @@ int main()
                     game.draw(wrapped[pieces[i][j] - 10]);
                 }
                 else if (pieces[i][j] == 16) {
+                    c_bomb.setPosition(i * 65.0f + offset.x, j * 65.0f + offset.y);
                     game.draw(c_bomb);
                 }
             }
@@ -276,6 +284,112 @@ void check_L(int grid[][9]) {
     }
 }
 
+void check_match_four(int grid[][9])
+{
+    for (int i = 0;i < 9;i++)
+    {
+        for (int j = 0;j < 9;j++)
+        {
+            if (grid[i][j] >= 0)
+            {
+                //column wise
+                if (j - 1 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2])
+                {
+                    grid[i][j] = -3;
+                    grid[i][j - 1] += 5;
+                    grid[i][j + 1] = -3;
+                    grid[i][j + 2] = -3;
+                }
+                else if (j - 1 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2] && grid[i][j] == grid[i][j + 1])
+                {
+                    grid[i][j] = -3;
+                    grid[i][j - 1] = -3;
+                    grid[i][j - 2] += 5;
+                    grid[i][j + 1] = -3;
+                }
+                else if (j - 1 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2] && grid[i][j] == grid[i][j - 3])
+                {
+                    grid[i][j] = -3;
+                    grid[i][j - 1] = -3;
+                    grid[i][j - 2] = -3;
+                    grid[i][j - 3] += 5;
+                }
+                else if ((grid[i][j] == grid[i][j + 1]) && (grid[i][j] == grid[i][j + 2]) && (grid[i][j] == grid[i][j + 3]))
+                {
+                    grid[i][j] += 5;
+                    grid[i][j + 1] = -3;
+                    grid[i][j + 2] = -3;
+                    grid[i][j + 3] = -3;
+                }
+
+                //row wise
+
+                if ((grid[i][j] == grid[i - 1][j]) && (grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]))
+                {
+                    grid[i][j] = -3;
+                    grid[i - 1][j] += 5;
+                    grid[i + 1][j] = -3;
+                    grid[i + 2][j] = -3;
+                }
+                else if ((grid[i][j] == grid[i - 1][j]) && (grid[i][j] == grid[i - 2][j]) && (grid[i][j] == grid[i + 1][j]))
+                {
+                    grid[i][j] = -3;
+                    grid[i - 1][j] = -3;
+                    grid[i - 2][j] += 5;
+                    grid[i + 1][j] = -3;
+                }
+                else if ((grid[i][j] == grid[i - 1][j]) && (grid[i][j] == grid[i - 2][j]) && (grid[i][j] == grid[i - 3][j]))
+                {
+                    grid[i][j] = -3;
+                    grid[i - 1][j] = -3;
+                    grid[i - 2][j] = -3;
+                    grid[i - 3][j] += 5;
+                }
+                else if ((grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]) && (grid[i][j] == grid[i + 3][j]))
+                {
+                    grid[i][j] += 5;
+                    grid[i + 1][j] = -3;
+                    grid[i + 1][j] = -3;
+                    grid[i + 3][j] = -3;
+                }
+            }
+
+        }
+    }
+}
+
+void check_match_five(int grid[][9])
+{
+    for (int i = 0;i < 9;i++)
+    {
+        for (int j = 0;j < 9;j++)
+        {
+            if (grid[i][j] >= 0)
+            {
+                //column wise
+                if ((grid[i][j] == grid[i][j + 1]) && (grid[i][j] == grid[i][j + 2]) && (grid[i][j] == grid[i][j + 3]) && (grid[i][j] == grid[i][j + 4]))
+                {
+                    grid[i][j] = -3;
+                    grid[i][j + 1] = -3;
+                    grid[i][j + 2] = -3;
+                    grid[i][j + 3] = 16;
+                    grid[i][j + 4] = -3;
+                }
+                //row wise
+
+                if ((grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]) && (grid[i][j] == grid[i + 3][j]) && (grid[i][j] == grid[i + 4][j]))
+                {
+                    grid[i][j] = -3;
+                    grid[i + 1][j] = -3;
+                    grid[i + 2][j] = -3;
+                    grid[i + 3][j] = 16;
+                    grid[i + 4][j] = -3;
+                }
+            }
+        }
+    }
+}
+
 void replace_piece(int grid[][9]) {
     for (int i = 8;i > 0;i--) {
         for (int j = 8;j > 0;j--) {
@@ -286,4 +400,47 @@ void replace_piece(int grid[][9]) {
             }
         }
     }
+}
+
+void save(int pieces[][9], int turn, int score)
+{
+    ofstream fout;
+    fout.open("Save.txt");
+    fout << turn << " ";
+    fout << score << endl;
+    for (int i = 0;i < 9;i++)
+    {
+        for (int j = 0;j < 9;j++)
+        {
+            fout << pieces[i][j] << " ";
+        }
+        cout << endl;
+    }
+    fout.close();
+}
+
+void load(int pieces[][9], int turn, int score)
+{
+    ifstream fin;
+    fin.open("Save.txt");
+    if (!fin)
+    {
+        cout << "Error loading the save game" << endl;
+    }
+    else
+    {
+        while (!fin.eof())
+        {
+            fin >> turn;
+            fin >> score;
+            for (int i = 0;i < 9;i++)
+            {
+                for (int j = 0;j < 9;j++)
+                {
+                    fin >> pieces[i][j];
+                }
+            }
+        }
+    }
+    fin.close();
 }
