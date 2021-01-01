@@ -23,7 +23,7 @@ void check_match_five(int grid[][9]);
 void color_bomb(int grid[][9], int x1, int y1, int x2, int y2);
 void striped_destruct(int grid[][9], int ID);
 void wrapped_destruct(int grid[][9], int ID);
-void wrapped_destruct_single(int grid[][9], int index);
+void wrapped_destruct_single(int grid[][9], int x, int y);
 void wrapped_trigger(int grid[][9], int x1, int y1, int x2, int y2);
 
 void wrap_stripe_trigger(int grid[][9]);
@@ -38,17 +38,54 @@ int main()
 {
     srand((unsigned int)time(0));
     points = 0;
-    turns = 15;
+    turns = 20;
     RenderWindow game(VideoMode(1080, 600), "Candy Crush <3");//setting window size
     
+    //setting up text
+    Text score_message, score_val, turn_message, turn_val, save_load_msg;
+    Font calibri;
+    Color color(0, 0, 128);
+    calibri.loadFromFile("fonts/Calibri_Bold.ttf");
+    score_message.setFont(calibri);
+    score_message.setCharacterSize(48);
+    score_message.setFillColor(color);
+    score_message.setPosition(30, 30);
+    score_message.setString("Points:");
+
+    score_val.setFont(calibri);
+    score_val.setCharacterSize(48);
+    score_val.setFillColor(color);
+    score_val.setPosition(45, 90);
+    score_val.setString(to_string(points));
+
+    turn_message.setFont(calibri);
+    turn_message.setCharacterSize(48);
+    turn_message.setFillColor(color);
+    turn_message.setPosition(30, 150);
+    turn_message.setString("Turns:");
+
+    turn_val.setFont(calibri);
+    turn_val.setCharacterSize(48);
+    turn_val.setFillColor(color);
+    turn_val.setPosition(45, 210);
+    turn_val.setString(to_string(turns));
+
+    save_load_msg.setFont(calibri);
+    save_load_msg.setCharacterSize(30);
+    save_load_msg.setFillColor(color);
+    save_load_msg.setPosition(30, 400);
+    save_load_msg.setString("To save game, press: S\nTo load game, press: L\n\nScor to beat: 50,000");
+
     //declaring textures
-    Texture nc[5], sc[5], wc[5], bg, bomb;
+    Texture nc[5], sc[5], wc[5], bg, bomb, circle_img;
     bomb.loadFromFile("textures/bomb.png");
     bg.loadFromFile("textures/bg.png");
+    circle_img.loadFromFile("textures/select_circle.png");
 
     load_candy_textures(nc, sc, wc);;
+
     //initializing all sprites
-    Sprite background(bg), c_bomb(bomb);
+    Sprite background(bg), c_bomb(bomb), circle(circle_img);
     Sprite normal[5], wrapped[5], striped[5];
 
     load_sprites(normal, striped, wrapped, nc, sc, wc);
@@ -69,14 +106,26 @@ int main()
             }
             if (x.type == Event::MouseButtonPressed) {
                 if (x.key.code == Mouse::Left) {
-                    mouse_pos = Mouse::getPosition(game);
-                    mouse_pos -= offset;
-                    mouse_pos /= tile;
-                    clicks += 1;
+                    if (turns > 0) {
+                        mouse_pos = Mouse::getPosition(game);
+                        mouse_pos -= offset;
+                        mouse_pos /= tile;
+                        clicks += 1;
+                    }
                 }
             }
             if (x.type == Event::KeyPressed) {
-                if (x.key.code == Keyboard::Space) {
+                if (x.key.code == Keyboard::S) {
+                    save(pieces, turns, points);
+                }
+            }
+            if (x.type == Event::KeyPressed) {
+                if (x.key.code == Keyboard::L) {
+                    load(pieces, turns, points);
+                }
+            }
+            if (x.type == Event::KeyPressed) {
+                if (x.key.code == Keyboard::Space) {//debuggin
                     cout << endl;
                     for (int i = 0;i < 9;i++) {
                         for (int j = 0;j < 9;j++) {
@@ -87,6 +136,9 @@ int main()
                 }
             }
         }
+        if (turns == 20) {
+            points = 0;
+        }
         if (clicks == 1) {
             x1 = mouse_pos.x;
             y1 = mouse_pos.y;
@@ -95,6 +147,7 @@ int main()
             x2 = mouse_pos.x;
             y2 = mouse_pos.y;
             if (adjacent_block(x1, y1, x2, y2)) {
+                turns--;
                 color_bomb(pieces, x1, y1, x2, y2);
                 color_bomb(pieces, x2, y2, x1, y1);
                 wrapped_trigger(pieces, x1, y1, x2, y2);
@@ -118,6 +171,13 @@ int main()
 
         //draw
         game.draw(background);
+        game.draw(score_message);
+        score_val.setString(to_string(points));
+        game.draw(score_val);
+        game.draw(turn_message);
+        turn_val.setString(to_string(turns));
+        game.draw(turn_val);
+        game.draw(save_load_msg);
         for (int j = 0;j < 9;j++) {
             for (int i = 0;i < 9;i++) {
                 if (pieces[i][j] >= 0 && pieces[i][j] < 5) {
@@ -137,6 +197,10 @@ int main()
                     game.draw(c_bomb);
                 }
             }
+        }
+        if (clicks == 1) {
+            circle.setPosition(x1 * 65.0f + offset.x, y1 * 65.0f + offset.y);
+            game.draw(circle);
         }
         game.display();
     }
@@ -212,17 +276,17 @@ void check_match(int grid[][9]) {
             if (grid[i][j] >= 0) {
                 if (grid[i][j] == grid[i + 1][j] && grid[i][j] == grid[i + 2][j]) {
                     cout << "found at: " << i << "," <<j << endl;
+                    score_manager(grid[i][j], 3);
                     grid[i][j] = -3;
                     grid[i + 1][j] = -3;
                     grid[i + 2][j] = -3;
-                    score_manager(grid[i][j], 3);
                 }
                 if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
                     cout << "found at: " << i << "," << j << endl;
+                    score_manager(grid[i][j], 3);
                     grid[i][j] = -3;
                     grid[i][j + 1] = -3;
                     grid[i][j + 2] = -3;
-                    score_manager(grid[i][j], 3);
                 }
             }
         }
@@ -543,6 +607,7 @@ void wrapped_destruct(int grid[][9], int ID) {
 }
 
 void score_manager(int value, int candies) {
+    cout << "came here" << endl;
     switch (value) {
     case 0:
         points += 30 * candies;
@@ -560,6 +625,7 @@ void score_manager(int value, int candies) {
         points += 60 * candies;
         break;
     }
+    cout << points << endl;
 }
 
 void wrapped_trigger(int grid[][9], int x1, int y1, int x2, int y2) {
@@ -626,21 +692,23 @@ void wrap_stripe_trigger(int grid[][9]) {
             if (grid[i][j] >= 10 && grid[i][j] < 15) {
                 int temp = grid[i][j] - 10;
                 if ((grid[i - 1][j] == temp && grid[i + 1][j] == temp) || (grid[i - 1][j] == temp && grid[i - 2][j] == temp) || (grid[i + 1][j] == temp && grid[i + 2][j] == temp)) {
-                    wrapped_destruct_single(grid, grid[i][j]);
+                    wrapped_destruct_single(grid, i, j);
                 }
                 if ((j - 1 >= 0 && grid[i][j - 1] == temp && grid[i][j + 1] == temp) || (j - 1 >= 0 && j - 2 >= 0 && grid[i][j - 1] == temp && grid[i][j - 2] == temp) || (grid[i][j + 1] == temp && grid[i][j + 2] == temp)) {
-                    wrapped_destruct_single(grid, grid[i][j]);
+                    wrapped_destruct_single(grid, i, j);
                 }
             }
         }
     }
 }
 
-void wrapped_destruct_single(int grid[][9], int index) {
-    for (int i = index - 1; i <= index + 1; i++)
+void wrapped_destruct_single(int grid[][9], int x, int y) {
+    for (int i = x - 1; i <= x + 1; i++)
     {
-        for (int j = index - 1; j <= index + 1; j++)
+        for (int j = y - 1; j <= y + 1; j++)
         {
+            cout << "wrapping" << endl;
+            cout << i << "," << j << endl;
             grid[i][j] = -3;
         }
     }
