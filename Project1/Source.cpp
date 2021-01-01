@@ -24,13 +24,14 @@ void color_bomb(int grid[][9], int x1, int y1, int x2, int y2);
 
 void save(int pieces[][9], int turn, int score);
 void load(int pieces[][9], int turn, int score);
+void score_manager(int value);
+
+int points = 0, turns = 0;
 
 int main()
 {
     srand((unsigned int)time(0));
     RenderWindow game(VideoMode(1080, 600), "Candy Crush <3");//setting window size
-    
-    int points = 0, turns = 0;
     
     //declaring textures
     Texture nc[5], sc[5], wc[5], bg, bomb;
@@ -199,17 +200,23 @@ void check_match(int grid[][9]) {
     for (int i = 0;i < 9;i++) {
         for (int j = 0;j < 9;j++) {
             if (grid[i][j] >= 0) {
-                if (grid[i][j] == grid[i - 1][j] && grid[i][j] == grid[i + 1][j]) {
+                if (grid[i][j] == grid[i + 1][j] && grid[i][j] == grid[i + 2][j]) {
                     cout << "found at: " << i << "," <<j << endl;
                     grid[i][j] = -3;
-                    grid[i - 1][j] = -3;
                     grid[i + 1][j] = -3;
+                    grid[i + 2][j] = -3;
+                    score_manager(grid[i][j]);
+                    score_manager(grid[i + 1][j]);
+                    score_manager(grid[i + 2][j]);
                 }
-                if (j - 1 >= 0 && j + 1 < 9/*<-- To avoid erro*/ && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j + 1]) {
+                if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
                     cout << "found at: " << i << "," << j << endl;
                     grid[i][j] = -3;
-                    grid[i][j - 1] = -3;
                     grid[i][j + 1] = -3;
+                    grid[i][j + 2] = -3;
+                    score_manager(grid[i][j]);
+                    score_manager(grid[i][j + 1]);
+                    score_manager(grid[i][j + 2]);
                 }
             }
         }
@@ -217,8 +224,8 @@ void check_match(int grid[][9]) {
 }
 
 void check_L(int grid[][9]) {
-    for (int i = 0;i < 9;i++) {
-        for (int j = 0;j < 9;j++) {
+    for (int j = 0;j < 9;j++) {
+        for (int i = 0;i < 9;i++) {
             if (grid[i][j] == grid[i + 1][j] && grid[i][j] == grid[i + 2][j]) {
                 //check L-shape
                 if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
@@ -301,62 +308,18 @@ void check_match_four(int grid[][9])
                 //column wise
                 if (j - 1 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2])
                 {
-                    grid[i][j] = -3;
-                    grid[i][j - 1] += 5;
-                    grid[i][j + 1] = -3;
-                    grid[i][j + 2] = -3;
-                }
-                else if (j - 1 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2] && grid[i][j] == grid[i][j + 1])
-                {
-                    grid[i][j] = -3;
-                    grid[i][j - 1] = -3;
-                    grid[i][j - 2] += 5;
-                    grid[i][j + 1] = -3;
-                }
-                else if (j - 1 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2] && grid[i][j] == grid[i][j - 3])
-                {
-                    grid[i][j] = -3;
-                    grid[i][j - 1] = -3;
-                    grid[i][j - 2] = -3;
-                    grid[i][j - 3] += 5;
-                }
-                else if ((grid[i][j] == grid[i][j + 1]) && (grid[i][j] == grid[i][j + 2]) && (grid[i][j] == grid[i][j + 3]))
-                {
                     grid[i][j] += 5;
+                    grid[i][j - 1] = -3;
                     grid[i][j + 1] = -3;
                     grid[i][j + 2] = -3;
-                    grid[i][j + 3] = -3;
                 }
-
                 //row wise
-
                 if ((grid[i][j] == grid[i - 1][j]) && (grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]))
                 {
-                    grid[i][j] = -3;
-                    grid[i - 1][j] += 5;
+                    grid[i][j] += 5;
+                    grid[i - 1][j] = -3;
                     grid[i + 1][j] = -3;
                     grid[i + 2][j] = -3;
-                }
-                else if ((grid[i][j] == grid[i - 1][j]) && (grid[i][j] == grid[i - 2][j]) && (grid[i][j] == grid[i + 1][j]))
-                {
-                    grid[i][j] = -3;
-                    grid[i - 1][j] = -3;
-                    grid[i - 2][j] += 5;
-                    grid[i + 1][j] = -3;
-                }
-                else if ((grid[i][j] == grid[i - 1][j]) && (grid[i][j] == grid[i - 2][j]) && (grid[i][j] == grid[i - 3][j]))
-                {
-                    grid[i][j] = -3;
-                    grid[i - 1][j] = -3;
-                    grid[i - 2][j] = -3;
-                    grid[i - 3][j] += 5;
-                }
-                else if ((grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]) && (grid[i][j] == grid[i + 3][j]))
-                {
-                    grid[i][j] += 5;
-                    grid[i + 1][j] = -3;
-                    grid[i + 1][j] = -3;
-                    grid[i + 3][j] = -3;
                 }
             }
 
@@ -376,19 +339,18 @@ void check_match_five(int grid[][9])
                 if ((grid[i][j] == grid[i][j + 1]) && (grid[i][j] == grid[i][j + 2]) && (grid[i][j] == grid[i][j + 3]) && (grid[i][j] == grid[i][j + 4]))
                 {
                     grid[i][j] = -3;
-                    grid[i][j + 1] = -3;
+                    grid[i][j + 1] = 16;
                     grid[i][j + 2] = -3;
-                    grid[i][j + 3] = 16;
+                    grid[i][j + 3] = -3;
                     grid[i][j + 4] = -3;
                 }
                 //row wise
-
                 if ((grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]) && (grid[i][j] == grid[i + 3][j]) && (grid[i][j] == grid[i + 4][j]))
                 {
                     grid[i][j] = -3;
-                    grid[i + 1][j] = -3;
+                    grid[i + 1][j] = 16;
                     grid[i + 2][j] = -3;
-                    grid[i + 3][j] = 16;
+                    grid[i + 3][j] = -3;
                     grid[i + 4][j] = -3;
                 }
             }
@@ -493,5 +455,25 @@ void color_bomb(int grid[][9], int x1, int y1, int x2, int y2) {
                 }
             }
         }
+    }
+}
+
+void score_manager(int value) {
+    switch (value) {
+    case 0:
+        points += 30;
+        break;
+    case 1:
+        points += 30;
+        break;
+    case 2:
+        points += 40;
+        break;
+    case 3:
+        points += 50;
+        break;
+    case 5:
+        points += 60;
+        break;
     }
 }
