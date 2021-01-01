@@ -21,16 +21,24 @@ void replace_piece(int grid[][9]);
 void check_match_five(int grid[][9]);
 
 void color_bomb(int grid[][9], int x1, int y1, int x2, int y2);
+void striped_destruct(int grid[][9], int ID);
+void wrapped_destruct(int grid[][9], int ID);
+void wrapped_destruct_single(int grid[][9], int index);
+void wrapped_trigger(int grid[][9], int x1, int y1, int x2, int y2);
+
+void wrap_stripe_trigger(int grid[][9]);
 
 void save(int pieces[][9], int turn, int score);
 void load(int pieces[][9], int turn, int score);
-void score_manager(int value);
+void score_manager(int value, int candies);
 
 int points = 0, turns = 0;
 
 int main()
 {
     srand((unsigned int)time(0));
+    points = 0;
+    turns = 15;
     RenderWindow game(VideoMode(1080, 600), "Candy Crush <3");//setting window size
     
     //declaring textures
@@ -89,8 +97,9 @@ int main()
             if (adjacent_block(x1, y1, x2, y2)) {
                 color_bomb(pieces, x1, y1, x2, y2);
                 color_bomb(pieces, x2, y2, x1, y1);
-                //check for striped candy
-                //check for wrapped candy
+                wrapped_trigger(pieces, x1, y1, x2, y2);
+                wrapped_trigger(pieces, x2, y2, x1, y1);
+                load_grid(2, pieces);
                 int temp = pieces[x1][y1];
                 pieces[x1][y1] = pieces[x2][y2];
                 pieces[x2][y2] = temp;
@@ -100,6 +109,7 @@ int main()
         check_match_five(pieces);
         check_match_four(pieces);
         check_L(pieces);
+        wrap_stripe_trigger(pieces);
         check_match(pieces);
         for (int i = 0;i < 9;i++) {
             replace_piece(pieces);//this function is called multiple times to make sure all tiles go as down as possible
@@ -205,18 +215,14 @@ void check_match(int grid[][9]) {
                     grid[i][j] = -3;
                     grid[i + 1][j] = -3;
                     grid[i + 2][j] = -3;
-                    score_manager(grid[i][j]);
-                    score_manager(grid[i + 1][j]);
-                    score_manager(grid[i + 2][j]);
+                    score_manager(grid[i][j], 3);
                 }
                 if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
                     cout << "found at: " << i << "," << j << endl;
                     grid[i][j] = -3;
                     grid[i][j + 1] = -3;
                     grid[i][j + 2] = -3;
-                    score_manager(grid[i][j]);
-                    score_manager(grid[i][j + 1]);
-                    score_manager(grid[i][j + 2]);
+                    score_manager(grid[i][j], 3);
                 }
             }
         }
@@ -229,6 +235,7 @@ void check_L(int grid[][9]) {
             if (grid[i][j] == grid[i + 1][j] && grid[i][j] == grid[i + 2][j]) {
                 //check L-shape
                 if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
+                    score_manager(grid[i][j], 4);
                     grid[i + 1][j] = -3;
                     grid[i + 2][j] = -3;
                     grid[i][j + 1] = -3;
@@ -236,6 +243,7 @@ void check_L(int grid[][9]) {
                     grid[i][j] += 10;
                 }
                 else if (j - 2 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2]) {
+                    score_manager(grid[i][j], 4);
                     grid[i + 1][j] = -3;
                     grid[i + 2][j] = -3;
                     grid[i][j - 1] = -3;
@@ -244,6 +252,7 @@ void check_L(int grid[][9]) {
                 }
                 //check T-shape
                 if (grid[i + 1][j] == grid[i + 1][j + 1] && grid[i + 1][j] == grid[i + 1][j + 2]) {
+                    score_manager(grid[i][j], 4);
                     grid[i][j] = -3;
                     grid[i + 2][j] = -3;
                     grid[i + 1][j + 1] = -3;
@@ -252,6 +261,7 @@ void check_L(int grid[][9]) {
                     cout << "yos\n";
                 }
                 else if (j - 2 >= 0 && grid[i + 1][j] == grid[i + 1][j - 1] && grid[i + 1][j] == grid[i + 1][j - 2]) {
+                    score_manager(grid[i][j], 4);
                     grid[i][j] = -3;
                     grid[i + 2][j] = -3;
                     grid[i + 1][j - 1] = -3;
@@ -263,6 +273,7 @@ void check_L(int grid[][9]) {
             if (grid[i][j] == grid[i - 1][j] && grid[i][j] == grid[i - 2][j]) {
                 //check L-shape
                 if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2]) {
+                    score_manager(grid[i][j], 4);
                     grid[i - 1][j] = -3;
                     grid[i - 2][j] = -3;
                     grid[i][j + 1] = -3;
@@ -270,6 +281,7 @@ void check_L(int grid[][9]) {
                     grid[i][j] += 10;
                 }
                 else if (j - 2 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j - 2]) {
+                    score_manager(grid[i][j], 4);
                     grid[i - 1][j] = -3;
                     grid[i - 2][j] = -3;
                     grid[i][j - 1] = -3;
@@ -279,6 +291,7 @@ void check_L(int grid[][9]) {
             }
             if (j - 1 >= 0 && grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j - 1]) {
                 if (grid[i][j] == grid[i + 1][j] && grid[i][j] == grid[i + 2][j]) {
+                    score_manager(grid[i][j], 4);
                     grid[i + 1][j] = -3;
                     grid[i + 2][j] = -3;
                     grid[i][j - 1] = -3;
@@ -286,6 +299,7 @@ void check_L(int grid[][9]) {
                     grid[i][j] += 10;
                 }
                 else if (grid[i][j] == grid[i - 1][j] && grid[i][j] == grid[i - 2][j]) {
+                    score_manager(grid[i][j], 4);
                     grid[i - 1][j] = -3;
                     grid[i - 2][j] = -3;
                     grid[i][j - 1] = -3;
@@ -308,6 +322,7 @@ void check_match_four(int grid[][9])
                 //column wise
                 if (j - 1 >= 0 && grid[i][j] == grid[i][j - 1] && grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j + 2])
                 {
+                    score_manager(grid[i][j], 3);
                     grid[i][j] += 5;
                     grid[i][j - 1] = -3;
                     grid[i][j + 1] = -3;
@@ -316,6 +331,7 @@ void check_match_four(int grid[][9])
                 //row wise
                 if ((grid[i][j] == grid[i - 1][j]) && (grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]))
                 {
+                    score_manager(grid[i][j], 3);
                     grid[i][j] += 5;
                     grid[i - 1][j] = -3;
                     grid[i + 1][j] = -3;
@@ -338,18 +354,20 @@ void check_match_five(int grid[][9])
                 //column wise
                 if ((grid[i][j] == grid[i][j + 1]) && (grid[i][j] == grid[i][j + 2]) && (grid[i][j] == grid[i][j + 3]) && (grid[i][j] == grid[i][j + 4]))
                 {
+                    score_manager(grid[i][j], 4);
                     grid[i][j] = -3;
-                    grid[i][j + 1] = 16;
-                    grid[i][j + 2] = -3;
+                    grid[i][j + 1] = -3;
+                    grid[i][j + 2] = 16;
                     grid[i][j + 3] = -3;
                     grid[i][j + 4] = -3;
                 }
                 //row wise
                 if ((grid[i][j] == grid[i + 1][j]) && (grid[i][j] == grid[i + 2][j]) && (grid[i][j] == grid[i + 3][j]) && (grid[i][j] == grid[i + 4][j]))
                 {
+                    score_manager(grid[i][j], 4);
                     grid[i][j] = -3;
-                    grid[i + 1][j] = 16;
-                    grid[i + 2][j] = -3;
+                    grid[i + 1][j] = -3;
+                    grid[i + 2][j] = 16;
                     grid[i + 3][j] = -3;
                     grid[i + 4][j] = -3;
                 }
@@ -414,12 +432,14 @@ void load(int pieces[][9], int turn, int score)
 }
 
 void color_bomb(int grid[][9], int x1, int y1, int x2, int y2) {
+    int striped_id = 0, wrapped_id = 0;
     if (grid[x1][y1] == 16) {
         grid[x1][y1] = -3;
         //swapped bomb with bomb
         if (grid[x2][y2] == 16) {
             for (int i = 0;i < 9;i++) {
                 for (int j = 0;j < 9;j++) {
+                    score_manager(grid[i][j], 1);
                     grid[i][j] = -3;
                 }
             }
@@ -430,6 +450,7 @@ void color_bomb(int grid[][9], int x1, int y1, int x2, int y2) {
             for (int i = 0;i < 9;i++) {
                 for (int j = 0;j < 9;j++) {
                     if (grid[i][j] == value) {
+                        score_manager(grid[i][j], 1);
                         grid[i][j] = -3;
                     }
                 }
@@ -437,6 +458,7 @@ void color_bomb(int grid[][9], int x1, int y1, int x2, int y2) {
         }
         //swapped bomb with striped candy
         else if (grid[x2][y2] >= 5 && grid[x2][y2] < 10) {
+            striped_id = grid[x2][y2];
             for (int i = 0;i < 9;i++) {
                 for (int j = 0;j < 9;j++) {
                     if (grid[i][j] == grid[x2][y2] - 5) {
@@ -444,9 +466,15 @@ void color_bomb(int grid[][9], int x1, int y1, int x2, int y2) {
                     }
                 }
             }
+            for (int i = 0;i < 9;i++) {
+                for (int j = 0;j < 9;j++) {
+                    striped_destruct(grid, striped_id);
+                }
+            }
         }
         //swapped bomb with wrapped candy
         else if (grid[x2][y2] >= 10 && grid[x2][y2] < 15) {
+            wrapped_id = grid[x2][y2];
             for (int i = 0;i < 9;i++) {
                 for (int j = 0;j < 9;j++) {
                     if (grid[i][j] == grid[x2][y2] - 10) {
@@ -454,26 +482,166 @@ void color_bomb(int grid[][9], int x1, int y1, int x2, int y2) {
                     }
                 }
             }
+            for (int i = 0;i < 9;i++) {
+                for (int j = 0;j < 9;j++) {
+                    wrapped_destruct(grid, wrapped_id);
+                }
+            }
         }
     }
 }
 
-void score_manager(int value) {
+void striped_destruct(int grid[][9], int ID) {
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0; j < 9; j++)
+        {
+            if (grid[i][j] == ID) {
+                if (ID == 5 || ID == 6) {//for red and green. since, red and green have vertical stripes
+                    for (int k = 0;k < 9;k++) {
+                        grid[i][k] = -3;
+                        score_manager(grid[i][k], 1);
+                    }
+                }
+                else if (ID >= 7 && ID <= 9) {//for blue, yellow and orange. since, they have horizontal stripes
+                    for (int k = 0;k < 9;k++) {
+                        grid[k][j] = -3;
+                        score_manager(grid[k][j], 1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void wrapped_destruct(int grid[][9], int ID) {
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0; j < 9; j++)
+        {
+            if (grid[i + 1][j + 1] == ID) {
+                grid[i + 1][j + 1] = -3;
+                score_manager(grid[i + 1][j + 1], 1);
+                grid[i + 1][j + 2] = -3;
+                score_manager(grid[i + 1][j + 2], 1);
+                grid[i + 1][j] = -3;
+                score_manager(grid[i + 1][j], 1);
+                grid[i + 2][j + 1] = -3;
+                score_manager(grid[i + 2][j + 1], 1);
+                grid[i + 2][j + 2] = -3;
+                score_manager(grid[i + 2][j + 2], 1);
+                grid[i + 2][j] = -3;
+                score_manager(grid[i + 2][j], 1);
+                grid[i][j + 1] = -3;
+                score_manager(grid[i][j + 1], 1);
+                grid[i][j + 2] = -3;
+                score_manager(grid[i][j + 2], 1);
+                grid[i][j] = -3;
+                score_manager(grid[i][j], 1);
+                ///detroy it's neighbours
+            }
+        }
+    }
+}
+
+void score_manager(int value, int candies) {
     switch (value) {
     case 0:
-        points += 30;
+        points += 30 * candies;
         break;
     case 1:
-        points += 30;
+        points += 30 * candies;
         break;
     case 2:
-        points += 40;
+        points += 40 * candies;
         break;
     case 3:
-        points += 50;
+        points += 50 * candies;
         break;
     case 5:
-        points += 60;
+        points += 60 * candies;
         break;
+    }
+}
+
+void wrapped_trigger(int grid[][9], int x1, int y1, int x2, int y2) {
+    if (grid[x1][y1] >= 10 && grid[x1][y1] <= 14) {
+        if (grid[x2][y2] >= 10 && grid[x2][y2] <= 14) {
+            for (int i = x1 - 2; i <= x1 + 2; i++)
+            {
+                for (int j = x1 - 2; j < y1 + 2; j++)
+                {
+                    if (grid[i][j] >= 0) {
+                        grid[i][j] = -3;
+                        score_manager(grid[i][j], 1);
+                    }
+                }
+            }
+        }
+        else if (grid[x2][y2] >= 5 && grid[x2][y2] <= 9) {
+            for (int i = x1 - 1; i <= x1 + 1; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    if (grid[i][j] >= 0) {
+                        grid[j][i] = -3;//vertical clearance
+                        score_manager(grid[j][i], 1);
+                    }
+                }
+            }
+            for (int i = y1 - 1; i <= y1 + 1; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    if (grid[i][j] >= 0) {
+                        grid[i][j] = -3;//horizontal clearance
+                        score_manager(grid[i][j], 1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void wrap_stripe_trigger(int grid[][9]) {
+    //trigger striped candies
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0; j < 9; j++)
+        {
+            if (grid[i][j] >= 5 && grid[i][j] < 10) {
+                int temp = grid[i][j] - 5;
+                if ((grid[i - 1][j] == temp && grid[i + 1][j] == temp) || (grid[i - 1][j] == temp && grid[i - 2][j] == temp) || (grid[i + 1][j] == temp && grid[i + 2][j] == temp)) {
+                    striped_destruct(grid, temp + 5);
+                    cout<<"papa phone uthayen";
+                }
+                if ((j - 1 >= 0 && grid[i][j - 1] == temp && grid[i][j + 1] == temp) || (j - 1 >= 0 && j - 2 >= 0 && grid[i][j - 1] == temp && grid[i][j - 2] == temp) || (grid[i][j + 1] == temp && grid[i][j + 2] == temp)) {
+                    striped_destruct(grid, temp + 5);
+                    cout<<"papa phone uthayen";
+                }
+            }
+        }
+    }
+    //trigger wrapped candies
+    for (int i = 0;i < 9;i++) {
+        for (int j = 0; j < 9; j++)
+        {
+            if (grid[i][j] >= 10 && grid[i][j] < 15) {
+                int temp = grid[i][j] - 10;
+                if ((grid[i - 1][j] == temp && grid[i + 1][j] == temp) || (grid[i - 1][j] == temp && grid[i - 2][j] == temp) || (grid[i + 1][j] == temp && grid[i + 2][j] == temp)) {
+                    wrapped_destruct_single(grid, grid[i][j]);
+                }
+                if ((j - 1 >= 0 && grid[i][j - 1] == temp && grid[i][j + 1] == temp) || (j - 1 >= 0 && j - 2 >= 0 && grid[i][j - 1] == temp && grid[i][j - 2] == temp) || (grid[i][j + 1] == temp && grid[i][j + 2] == temp)) {
+                    wrapped_destruct_single(grid, grid[i][j]);
+                }
+            }
+        }
+    }
+}
+
+void wrapped_destruct_single(int grid[][9], int index) {
+    for (int i = index - 1; i <= index + 1; i++)
+    {
+        for (int j = index - 1; j <= index + 1; j++)
+        {
+            grid[i][j] = -3;
+        }
     }
 }
