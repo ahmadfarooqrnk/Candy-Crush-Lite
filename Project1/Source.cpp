@@ -20,6 +20,8 @@ void check_L(int grid[][9]);
 void replace_piece(int grid[][9]);
 void check_match_five(int grid[][9]);
 
+void color_bomb(int grid[][9], int x1, int y1, int x2, int y2);
+
 void save(int pieces[][9], int turn, int score);
 void load(int pieces[][9], int turn, int score);
 
@@ -27,7 +29,8 @@ int main()
 {
     srand((unsigned int)time(0));
     RenderWindow game(VideoMode(1080, 600), "Candy Crush <3");//setting window size
-    game.setFramerateLimit(60);
+    
+    int points = 0, turns = 0;
     
     //declaring textures
     Texture nc[5], sc[5], wc[5], bg, bomb;
@@ -83,6 +86,10 @@ int main()
             x2 = mouse_pos.x;
             y2 = mouse_pos.y;
             if (adjacent_block(x1, y1, x2, y2)) {
+                color_bomb(pieces, x1, y1, x2, y2);
+                color_bomb(pieces, x2, y2, x1, y1);
+                //check for striped candy
+                //check for wrapped candy
                 int temp = pieces[x1][y1];
                 pieces[x1][y1] = pieces[x2][y2];
                 pieces[x2][y2] = temp;
@@ -93,10 +100,9 @@ int main()
         check_match_four(pieces);
         check_L(pieces);
         check_match(pieces);
-        replace_piece(pieces);//this function is called multiple times to make sure all tiles go as down as possible
-        replace_piece(pieces);
-        replace_piece(pieces);
-        replace_piece(pieces);
+        for (int i = 0;i < 9;i++) {
+            replace_piece(pieces);//this function is called multiple times to make sure all tiles go as down as possible
+        }
         load_grid(2, pieces);
 
         //draw
@@ -443,4 +449,49 @@ void load(int pieces[][9], int turn, int score)
         }
     }
     fin.close();
+}
+
+void color_bomb(int grid[][9], int x1, int y1, int x2, int y2) {
+    if (grid[x1][y1] == 16) {
+        grid[x1][y1] = -3;
+        //swapped bomb with bomb
+        if (grid[x2][y2] == 16) {
+            for (int i = 0;i < 9;i++) {
+                for (int j = 0;j < 9;j++) {
+                    grid[i][j] = -3;
+                }
+            }
+        }
+        //swapped bomb with normal candy
+        else if (grid[x2][y2] >= 0 && grid[x2][y2] < 5) {
+            int value = grid[x2][y2];
+            for (int i = 0;i < 9;i++) {
+                for (int j = 0;j < 9;j++) {
+                    if (grid[i][j] == value) {
+                        grid[i][j] = -3;
+                    }
+                }
+            }
+        }
+        //swapped bomb with striped candy
+        else if (grid[x2][y2] >= 5 && grid[x2][y2] < 10) {
+            for (int i = 0;i < 9;i++) {
+                for (int j = 0;j < 9;j++) {
+                    if (grid[i][j] == grid[x2][y2] - 5) {
+                        grid[i][j] += 5;
+                    }
+                }
+            }
+        }
+        //swapped bomb with wrapped candy
+        else if (grid[x2][y2] >= 10 && grid[x2][y2] < 15) {
+            for (int i = 0;i < 9;i++) {
+                for (int j = 0;j < 9;j++) {
+                    if (grid[i][j] == grid[x2][y2] - 10) {
+                        grid[i][j] += 10;
+                    }
+                }
+            }
+        }
+    }
 }
