@@ -30,7 +30,7 @@ void wrapped_trigger(int grid[][13], int x1, int y1, int x2, int y2);
 void wrap_stripe_trigger(int grid[][13]);
 
 void save(int pieces[][13], int turn, int score);
-void load(int pieces[][13], int turn, int score);
+void load(int pieces[][13], int& turn, int& score);
 void score_manager(int value, int candies);
 
 int points = 0, turns = 0;
@@ -212,8 +212,8 @@ start:
         turn_val.setString(to_string(turns));
         game.draw(turn_val);
         game.draw(save_load_msg);
-        game.draw(game_over);
         if (turns == 0) {
+            game.draw(game_over);
         }
         for (int j = 2;j < 11;j++) {
             for (int i = 2;i < 11;i++) {
@@ -504,7 +504,7 @@ void save(int pieces[][13], int turn, int score)
     fout.close();
 }
 
-void load(int pieces[][13], int turn, int score)
+void load(int pieces[][13], int& turn, int& score)
 {
     ifstream fin;
     fin.open("Save.txt");
@@ -606,14 +606,12 @@ void striped_destruct_single(int grid[][13], int ID, int x, int y) {
         for (int k = 2;k < 11;k++) {
             grid[x][k] = -3;
             score_manager(grid[x][k], 1);
-            cout << x << "," << k << endl;
         }
     }
     if (ID >= 7 && ID <= 9) {//for blue, yellow and orange. since, they have horizontal stripes
         for (int k = 2;k < 11;k++) {
             grid[k][y] = -3;
             score_manager(grid[k][y], 1);
-            cout << k << "," << y << endl;
         }
     }
 }
@@ -702,11 +700,9 @@ void wrap_stripe_trigger(int grid[][13]) {
             if (grid[i][j] >= 5 && grid[i][j] < 10) {
                 int temp = grid[i][j] - 5;
                 if ((grid[i - 1][j] == temp && grid[i + 1][j] == temp) || (grid[i - 1][j] == temp && grid[i - 2][j] == temp) || (grid[i + 1][j] == temp && grid[i + 2][j] == temp)) {
-                    cout << "i=" << i << "," << "j=" << j << endl;
                     striped_destruct_single(grid, temp + 5, i, j);
                 }
                 if ((j - 1 >= 0 && grid[i][j - 1] == temp && grid[i][j + 1] == temp) || (j - 1 >= 0 && j - 2 >= 0 && grid[i][j - 1] == temp && grid[i][j - 2] == temp) || (grid[i][j + 1] == temp && grid[i][j + 2] == temp)) {
-                    cout << "i=" << i << "," << "j=" << j << endl;
                     striped_destruct_single(grid, temp + 5, i, j);
                 }
             }
