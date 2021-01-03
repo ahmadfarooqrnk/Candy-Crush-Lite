@@ -37,12 +37,12 @@ int points = 0, turns = 0;
 
 int main()
 {
-    start:
+start:
     srand((unsigned int)time(0));
     points = 0;
     turns = 20;
     RenderWindow game(VideoMode(1080, 600), "Candy Crush <3");//setting window size
-    
+
     //setting up text
     Text score_message, score_val, turn_message, turn_val, save_load_msg, game_over;
     Font calibri;
@@ -71,7 +71,7 @@ int main()
     turn_val.setFillColor(color);
     turn_val.setPosition(45, 210);
     turn_val.setString(to_string(turns));
-    
+
     game_over.setFont(calibri);
     game_over.setCharacterSize(35);
     game_over.setFillColor(color);
@@ -212,7 +212,7 @@ int main()
         turn_val.setString(to_string(turns));
         game.draw(turn_val);
         game.draw(save_load_msg);
-            game.draw(game_over);
+        game.draw(game_over);
         if (turns == 0) {
         }
         for (int j = 2;j < 11;j++) {
@@ -238,7 +238,7 @@ int main()
         if (clicks == 1) {
             if (x1 >= 2 && x1 < 11 && y1 >= 2 && y1 < 11) {
                 circle.setPosition((x1 - 2) * 65.0f + offset.x, (y1 - 2) * 65.0f + offset.y);
-                game.draw(circle);            
+                game.draw(circle);
             }
         }
         game.display();
@@ -319,7 +319,7 @@ void check_match(int grid[][13]) {
                     grid[i + 1][j] = -3;
                     grid[i - 1][j] = -3;
                 }
-                if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j -1]) {
+                if (grid[i][j] == grid[i][j + 1] && grid[i][j] == grid[i][j - 1]) {
                     score_manager(grid[i][j], 3);
                     grid[i][j] = -3;
                     grid[i][j + 1] = -3;
@@ -594,7 +594,26 @@ void striped_destruct(int grid[][13], int ID) {
     for (int i = 2;i < 11;i++) {
         for (int j = 2; j < 11; j++)
         {
-            striped_destruct_single(grid, ID, i, j);
+            if (grid[i][j] == ID) {
+                striped_destruct_single(grid, ID, i, j);
+            }
+        }
+    }
+}
+
+void striped_destruct_single(int grid[][13], int ID, int x, int y) {
+    if (ID == 5 || ID == 6) {//for red and green. since, red and green have vertical stripes
+        for (int k = 2;k < 11;k++) {
+            grid[x][k] = -3;
+            score_manager(grid[x][k], 1);
+            cout << x << "," << k << endl;
+        }
+    }
+    if (ID >= 7 && ID <= 9) {//for blue, yellow and orange. since, they have horizontal stripes
+        for (int k = 2;k < 11;k++) {
+            grid[k][y] = -3;
+            score_manager(grid[k][y], 1);
+            cout << k << "," << y << endl;
         }
     }
 }
@@ -606,6 +625,16 @@ void wrapped_destruct(int grid[][13], int ID) {
             if (grid[i][j] == ID) {
                 wrapped_destruct_single(grid, i, j);
             }
+        }
+    }
+}
+
+void wrapped_destruct_single(int grid[][13], int x, int y) {
+    for (int i = x - 1; i <= x + 1; i++)
+    {
+        for (int j = y - 1; j <= y + 1; j++)
+        {
+            grid[i][j] = -3;
         }
     }
 }
@@ -696,33 +725,6 @@ void wrap_stripe_trigger(int grid[][13]) {
                     wrapped_destruct_single(grid, i, j);
                 }
             }
-        }
-    }
-}
-
-void wrapped_destruct_single(int grid[][13], int x, int y) {
-    for (int i = x - 1; i <= x + 1; i++)
-    {
-        for (int j = y - 1; j <= y + 1; j++)
-        {
-            grid[i][j] = -3;
-        }
-    }
-}
-
-void striped_destruct_single(int grid[][13], int ID, int x, int y) {
-    if (ID == 5 || ID == 6) {//for red and green. since, red and green have vertical stripes
-        for (int k = 2;k < 11;k++) {
-            grid[x][k] = -3;
-            score_manager(grid[x][k], 1);
-            cout << x << "," << k << endl;
-        }
-    }
-    if (ID >= 7 && ID <= 9) {//for blue, yellow and orange. since, they have horizontal stripes
-        for (int k = 2;k < 11;k++) {
-            grid[k][y] = -3;
-            score_manager(grid[k][y], 1);
-            cout << k << "," << y << endl;
         }
     }
 }
