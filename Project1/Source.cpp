@@ -180,17 +180,23 @@ start:
                 pieces[x2][y2] = temp;
                 color_bomb(pieces, x1, y1, x2, y2);
                 color_bomb(pieces, x2, y2, x1, y1);
-                load_grid(2, pieces);
                 wrapped_trigger(pieces, x2, y2, x1, y1);
                 wrapped_trigger(pieces, x1, y1, x2, y2);
-                load_grid(2, pieces);
             }
             clicks = 0;
         }
+        for (int i = 2;i < 11;i++) {
+            replace_piece(pieces);//this function is called multiple times to make sure all tiles go as down as possible
+        }
+        load_grid(2, pieces);
         check_match_five(pieces);
         check_match_four(pieces);
         check_L(pieces);
         wrap_stripe_trigger(pieces);
+        for (int i = 2;i < 11;i++) {
+            replace_piece(pieces);//this function is called multiple times to make sure all tiles go as down as possible
+        }
+        load_grid(2, pieces);
         check_match(pieces);
         for (int i = 2;i < 11;i++) {
             replace_piece(pieces);//this function is called multiple times to make sure all tiles go as down as possible
@@ -477,7 +483,7 @@ void check_match_five(int grid[][13])
 
 void replace_piece(int grid[][13]) {
     for (int i = 10;i > 2;i--) {
-        for (int j = 10;j > 2;j--) {
+        for (int j = 10;j >= 2;j--) {
             if (grid[j][i] == -3) {
                 int temp = grid[j][i - 1];
                 grid[j][i] = temp;
@@ -550,6 +556,7 @@ void color_bomb(int grid[][13], int x1, int y1, int x2, int y2) {
                     if (grid[i][j] == value) {
                         score_manager(grid[i][j], 1);
                         grid[i][j] = -3;
+                        cout << i << "," << j << endl;
                     }
                 }
             }
@@ -638,22 +645,25 @@ void wrapped_destruct_single(int grid[][13], int x, int y) {
 }
 
 void score_manager(int value, int candies) {
-    switch (value) {
-    case 0:
+    //assuming that striped and wrapped candies also score the same points as their normal counterparts
+    if (value == 0 || value == 5 || value == 10) {//red
         points += 30 * candies;
-        break;
-    case 1:
-        points += 30 * candies;
-        break;
-    case 2:
+    }
+    else if (value == 1 || value == 6 || value == 11) {//green
         points += 40 * candies;
-        break;
-    case 3:
+    }
+    else if (value == 2 || value == 7 || value == 12) {//blue
         points += 50 * candies;
-        break;
-    case 5:
+    }
+    else if (value == 3 || value == 8 || value == 13) {//yellow
+        points += 30 * candies;
+    }
+    else if (value == 4 || value == 9 || value == 14) {//orange
         points += 60 * candies;
-        break;
+    }
+    //assuming that color bomb scores 70 points in itself
+    else if (value == 16) {
+        points += 70 * candies;
     }
 }
 
@@ -662,11 +672,12 @@ void wrapped_trigger(int grid[][13], int x1, int y1, int x2, int y2) {
         if (grid[x2][y2] >= 10 && grid[x2][y2] <= 14) {//wrapped x wrapped
             for (int i = x1 - 2; i <= x1 + 2; i++)
             {
-                for (int j = y1 - 2; j < y1 + 2; j++)
+                for (int j = y1 - 2; j <= y1 + 2; j++)
                 {
+                    cout << i << "," << j << endl;
                     if (i >= 0) {
-                        grid[i][j] = -3;
                         score_manager(grid[i][j], 1);
+                        grid[i][j] = -3;
                     }
                 }
             }
@@ -676,16 +687,16 @@ void wrapped_trigger(int grid[][13], int x1, int y1, int x2, int y2) {
             {
                 for (int j = 2; j < 11; j++)
                 {
-                    grid[i][j] = -3;//vertical clearance
                     score_manager(grid[i][j], 1);
+                    grid[i][j] = -3;//vertical clearance
                 }
             }
             for (int i = y1 - 1; i <= y1 + 1; i++)
             {
                 for (int j = 2; j < 11; j++)
                 {
-                    grid[j][i] = -3;//horizontal clearance
                     score_manager(grid[j][i], 1);
+                    grid[j][i] = -3;//horizontal clearance
                 }
             }
         }
@@ -699,10 +710,40 @@ void wrap_stripe_trigger(int grid[][13]) {
         {
             if (grid[i][j] >= 5 && grid[i][j] < 10) {
                 int temp = grid[i][j] - 5;
-                if ((grid[i - 1][j] == temp && grid[i + 1][j] == temp) || (grid[i - 1][j] == temp && grid[i - 2][j] == temp) || (grid[i + 1][j] == temp && grid[i + 2][j] == temp)) {
+                if (grid[i - 1][j] == temp && grid[i + 1][j] == temp) {
+                    score_manager(temp, 2);
+                    grid[i - 1][j] = -3;
+                    grid[i + 1][j] = -3;
                     striped_destruct_single(grid, temp + 5, i, j);
                 }
-                if ((j - 1 >= 0 && grid[i][j - 1] == temp && grid[i][j + 1] == temp) || (j - 1 >= 0 && j - 2 >= 0 && grid[i][j - 1] == temp && grid[i][j - 2] == temp) || (grid[i][j + 1] == temp && grid[i][j + 2] == temp)) {
+                else if (grid[i - 1][j] == temp && grid[i - 2][j] == temp) {
+                    score_manager(temp, 2);
+                    grid[i - 1][j] = -3;
+                    grid[i - 2][j] = -3;
+                    striped_destruct_single(grid, temp + 5, i, j);
+                }
+                else if (grid[i + 1][j] == temp && grid[i + 2][j] == temp) {
+                    score_manager(temp, 2);
+                    grid[i + 1][j] = -3;
+                    grid[i + 2][j] = -3;
+                    striped_destruct_single(grid, temp + 5, i, j);
+                }
+                if (grid[i][j - 1] == temp && grid[i][j + 1] == temp) {
+                    score_manager(temp, 2);
+                    grid[i][j - 1] = -3;
+                    grid[i][j + 1] = -3;
+                    striped_destruct_single(grid, temp + 5, i, j);
+                }
+                else if (grid[i][j - 1] == temp && grid[i][j - 2] == temp) {
+                    score_manager(temp, 2);
+                    grid[i][j - 1] = -3;
+                    grid[i][j - 2] = -3;
+                    striped_destruct_single(grid, temp + 5, i, j);
+                }
+                else if (grid[i][j + 1] == temp && grid[i][j + 2] == temp) {
+                    score_manager(temp, 2);
+                    grid[i][j + 1] = -3;
+                    grid[i][j + 2] = -3;
                     striped_destruct_single(grid, temp + 5, i, j);
                 }
             }
